@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
-import ControleDirecao from '../components/ControleDirecao'
+import BarraMapa from '../components/BarraMapa'
 import FaixaEventos from '../components/FaixaEventos'
-import FalhasLegenda from '../components/FalhasLegenda'
+import Legenda from '../components/Legenda'
 import Mapa from '../components/Mapa'
 import PainelLateral from '../components/PainelLateral'
 import PainelViaturas from '../components/PainelViaturas'
@@ -15,9 +15,9 @@ import { useTeclado } from '../hooks/useTeclado'
 import { useViaturas } from '../hooks/useViaturas'
 import { useSimulacaoStore } from '../store/useSimulacaoStore'
 import type { Cores } from '../components/Mapa/desenho'
+import { MaquetePageStyles as S } from './styles'
 
-// Acima de 1280 px: controles | mapa + faixa de eventos | painel lateral.
-// Entre 1080 e 1279 px os controles descem para baixo do mapa; no celular tudo empilha.
+// O mapa é o centro: ferramentas em cima, legenda e regras recentes embaixo.
 export default function MaquetePage() {
   const viaturas = useViaturas()
   const carros = useCarrosComuns()
@@ -55,25 +55,22 @@ export default function MaquetePage() {
   }, [])
 
   return (
-    <div className="mx-auto flex max-w-[1480px] flex-col gap-3.5 px-4 pt-3.5 pb-6">
+    <div className={S.pagina}>
       <Topo aoVerRequisitos={aoVerRequisitos} />
-      <main className="grid grid-cols-1 gap-3.5 min-[1080px]:grid-cols-[minmax(0,1fr)_minmax(330px,410px)] min-[1080px]:items-start">
-        <section
-          aria-label="Maquete"
-          className="flex min-w-0 flex-col gap-3 min-[1280px]:grid min-[1280px]:grid-cols-[252px_minmax(0,1fr)] min-[1280px]:items-start"
-        >
-          <div className="flex min-w-0 flex-col gap-2.5">
-            <Mapa aoClicarCruzamento={aoClicarCruzamento} complementos={complementos} />
-            <FaixaEventos />
-          </div>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-3 min-[1280px]:order-first min-[1280px]:grid-cols-1">
-            <PainelViaturas esperando={viaturas.esperando} />
-            <ControleDirecao comando={viaturas.comando} />
-            <RegistrarEmergencia />
-            <FalhasLegenda />
-          </div>
+      <main className={S.grade}>
+        <section aria-label="Maquete" className={S.centro}>
+          <BarraMapa comando={viaturas.comando} />
+          <Mapa aoClicarCruzamento={aoClicarCruzamento} complementos={complementos} />
+          <Legenda />
+          <FaixaEventos />
         </section>
-        <PainelLateral />
+        <div className={S.controles}>
+          <RegistrarEmergencia />
+          <PainelViaturas esperando={viaturas.esperando} />
+        </div>
+        <div className={S.lateral}>
+          <PainelLateral />
+        </div>
       </main>
     </div>
   )

@@ -5,6 +5,9 @@ export const Estilo = {
     'cursor-pointer rounded-lg border border-accent bg-accent px-3 py-1.5 font-medium leading-tight text-accent-fg hover:brightness-110 aria-pressed:border-sig-amarelo aria-pressed:bg-sig-amarelo aria-pressed:text-[#1d1600]',
   bloco: 'flex min-w-0 flex-col gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3',
   blocoTit: 'font-display text-[1.02rem] font-bold tracking-[.02em] uppercase',
+  // grupo de botões numa linha só, usado na barra acima do mapa
+  grupo: 'flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-2',
+  grupoTit: 'font-display text-[.92rem] font-bold tracking-[.02em] text-muted uppercase',
   dica: 'm-0 text-[.82rem] text-muted',
 }
 

@@ -1,9 +1,8 @@
 const SW = 'block flex-none rounded-sm'
 
-export const FalhasLegendaStyles = {
-  botoes: 'flex flex-wrap gap-2',
+export const LegendaStyles = {
   legenda:
-    'm-0 grid list-none grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-x-2.5 gap-y-[5px] p-0 text-[.82rem] text-muted',
+    'm-0 flex list-none flex-wrap items-center gap-x-4 gap-y-1.5 rounded-[10px] border border-line bg-surface px-3 py-2 text-[.8rem] text-muted',
   item: 'flex items-center gap-[7px]',
   faixa: `${SW} h-1.5 w-[18px]`,
   anel: 'block size-[13px] flex-none rounded-full border-[2.5px] border-sig-verde bg-transparent',

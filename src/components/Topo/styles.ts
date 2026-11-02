@@ -1,5 +1,5 @@
 export const TopoStyles = {
-  topo: 'flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
+  topo: 'flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-line bg-surface px-4 py-2.5',
   marca: 'flex min-w-0 items-center gap-3',
   sinal: 'grid gap-[3px] rounded-md bg-fg px-1 py-[5px]',
   luz: 'size-[9px] rounded-full bg-muted opacity-35',
