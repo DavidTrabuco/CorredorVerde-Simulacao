@@ -1,70 +1,128 @@
 @import "tailwindcss";
 
-/* Tokens de cor copiados da maquete de referência. O tema acompanha prefers-color-scheme. */
+/* Tokens de cor. A interface é sóbria (cinzas neutros, uma cor de destaque, sombras mínimas); o mapa tem
+   as próprias cores (--map-*). A aplicação usa sempre o tema escuro (definido logo abaixo). */
 :root {
-  --bg: #e8edf0;
+  --bg: #f2f3f5;
   --surface: #ffffff;
-  --surface-2: #f2f5f7;
-  --fg: #152027;
-  --muted: #586771;
-  --line: #d2dade;
-  --accent: #0a6c8c;
+  --surface-2: #f6f7f9;
+  --fg: #16191f;
+  --muted: #5d6573;
+  --line: #e2e5ea;
+  --accent: #0e7a5f;
   --accent-fg: #ffffff;
-  --sig-verde: #12985a;
-  --sig-amarelo: #d99a00;
-  --sig-vermelho: #d63c33;
-  --rota-amb: #1873d3;
-  --rota-bom: #df5f17;
-  --ocorrencia: #cf2347;
-  --map-chao: #d6ddd4;
-  --map-calcada: #e4e8e2;
-  --map-predio: #bfc8c4;
-  --map-predio-2: #aeb8b5;
-  --map-parque: #a7c99a;
-  --map-arvore: #82ad74;
-  --map-asfalto: #59636b;
-  --map-cruz: #646f77;
-  --map-faixa: #eef1f3;
-  --map-texto: #1f2d36;
-  --map-especial: #f6f7f8;
-  --f-display: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
-  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sombra: 0 1px 2px rgb(16 24 40 / 6%);
+  /* fundo da página: grade de pontos discreta e uma faixa de luz no topo */
+  --grade: rgb(15 23 42 / 9%);
+  --bg-topo: rgb(14 122 95 / 7%);
+  --sig-verde: #16a05d;
+  --sig-amarelo: #e5a000;
+  --sig-vermelho: #e0453a;
+  --rota-amb: #1a73e8;
+  --rota-bom: #f06a1d;
+  --rota-amb-fg: #ffffff;
+  --rota-bom-fg: #ffffff;
+  --ocorrencia: #d93251;
+  --map-chao: #edf0f3;
+  --map-calcada: #e2e7ec;
+  --map-predio: #d6dce4;
+  --map-predio-2: #ccd3dc;
+  --map-parque: #c8e6c3;
+  --map-arvore: #9fcf95;
+  --map-arvore-2: #c3e6b9;
+  --map-telhado: #e2e7ed;
+  --map-asfalto: #ffffff;
+  --map-borda: #d0d8e2;
+  --map-cruz: #ffffff;
+  --map-faixa: #c3ccd7;
+  --map-texto: #4b5866;
+  --map-especial: #ffffff;
+  --map-sombra: rgb(30 45 60 / 18%);
+  --map-realce: rgb(255 255 255 / 70%);
+  --map-poste: #a3adb9;
+  --map-poste-luz: rgb(255 214 140 / 0%);
+  --map-agua: #a9cde6;
+  --map-janela: rgb(255 210 140 / 0%);
+  --map-luz-branca: rgb(230 240 255 / 0%);
+  --map-luz-quente: rgb(255 190 110 / 0%);
+  --map-luz-azul: rgb(110 160 255 / 0%);
+  --map-hosp-telhado: #c0d0df;
+  --map-terreno: #e9edf2;
+  --map-fachada: #a9b2be;
+  --map-telha: #c98b6c;
+  --map-meio-fio: #c6ced8;
+  --map-policia-telhado: #b9c8d8;
+  --map-concreto: #bcc3cc;
+  --map-galpao: #b2bac4;
+  --map-vermelho-escuro: #8f2a26;
+  --map-amarelo-seg: #d9a520;
+  --map-azul-policia: #2f63b8;
+  --f-display: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1317;
-    --surface: #151c21;
-    --surface-2: #1b242a;
-    --fg: #e1e7eb;
-    --muted: #92a1ab;
-    --line: #29343b;
-    --accent: #4ab3d8;
-    --accent-fg: #052330;
-    --sig-verde: #2ec46e;
-    --sig-amarelo: #f2b41c;
-    --sig-vermelho: #f0574d;
-    --rota-amb: #4ea4ff;
-    --rota-bom: #ff8a3d;
-    --ocorrencia: #ff4d6d;
-    --map-chao: #10171b;
-    --map-calcada: #1b2328;
-    --map-predio: #242e35;
-    --map-predio-2: #2b363e;
-    --map-parque: #1b2f22;
-    --map-arvore: #27452f;
-    --map-asfalto: #2f373e;
-    --map-cruz: #363f46;
-    --map-faixa: #7f8b92;
-    --map-texto: #c7d1d8;
-    --map-especial: #2d3a42;
-    color-scheme: dark;
-  }
+/* Tema escuro: é o tema da aplicação (decisão do Davi). Os valores acima ficam só como base. */
+/* Modo noturno de app de navegação: azul-marinho, ruas mais claras que as quadras. */
+:root {
+  --bg: #0a0d13;
+  --surface: #10141c;
+  --surface-2: #161b25;
+  --fg: #e6e9ef;
+  --muted: #8e97a6;
+  --line: #232a36;
+  --accent: #3fb68f;
+  --accent-fg: #06231a;
+  --sombra: 0 1px 2px rgb(0 0 0 / 40%);
+  --grade: rgb(148 163 184 / 8%);
+  --bg-topo: rgb(63 182 143 / 6%);
+  --sig-verde: #34d17f;
+  --sig-amarelo: #fbbf24;
+  --sig-vermelho: #f4645b;
+  --rota-amb: #5ea8ff;
+  --rota-bom: #ff9447;
+  --rota-amb-fg: #04203f;
+  --rota-bom-fg: #2a1200;
+  --ocorrencia: #ff5d7d;
+  --map-chao: #0a1020;
+  --map-calcada: #121c31;
+  --map-predio: #24334f;
+  --map-predio-2: #2a3a5a;
+  --map-parque: #0d2a26;
+  --map-arvore: #134236;
+  --map-arvore-2: #1f5e48;
+  --map-telhado: #30416a;
+  --map-asfalto: #2d3a57;
+  --map-borda: #070c18;
+  --map-cruz: #38486e;
+  --map-faixa: #a9b6d2;
+  --map-texto: #c6d0e3;
+  --map-especial: #142039;
+  --map-sombra: rgb(0 0 0 / 60%);
+  --map-realce: rgb(160 190 245 / 22%);
+  --map-poste: #d9c89a;
+  --map-poste-luz: rgb(255 205 130 / 16%);
+  --map-agua: #12304a;
+  --map-janela: rgb(255 208 140 / 60%);
+  --map-luz-branca: rgb(225 236 255 / 20%);
+  --map-luz-quente: rgb(255 186 100 / 20%);
+  --map-luz-azul: rgb(110 160 255 / 22%);
+  --map-hosp-telhado: #4d6489;
+  --map-terreno: #121b2e;
+  --map-fachada: #111a2c;
+  --map-telha: #6e4136;
+  --map-meio-fio: #3d4b68;
+  --map-policia-telhado: #40557c;
+  --map-concreto: #3d4a62;
+  --map-galpao: #36435a;
+  --map-vermelho-escuro: #8a2f2b;
+  --map-amarelo-seg: #d8a93a;
+  --map-azul-policia: #4f86d6;
+  color-scheme: dark;
 }
 
-/* Tokens disponíveis como classes Tailwind: bg-surface, text-muted, border-line... */
+/* Tokens disponíveis como classes Tailwind: bg-surface, text-muted, border-line, shadow-cartao... */
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -79,11 +137,36 @@
   --color-sig-vermelho: var(--sig-vermelho);
   --color-rota-amb: var(--rota-amb);
   --color-rota-bom: var(--rota-bom);
+  --color-rota-amb-fg: var(--rota-amb-fg);
+  --color-rota-bom-fg: var(--rota-bom-fg);
   --color-ocorrencia: var(--ocorrencia);
   --color-map-chao: var(--map-chao);
+  --shadow-cartao: var(--sombra);
   --font-display: var(--f-display);
   --font-body: var(--f-body);
   --font-mono: var(--f-mono);
+}
+
+/* Animações curtas: número que mudou e evento novo no log (respeitam "reduzir movimento"). */
+@keyframes numero {
+  from {
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes evento-novo {
+  from {
+    background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+  }
 }
 
 /* Em @layer base para as classes do Tailwind (utilities) poderem sobrescrever. */
@@ -94,11 +177,20 @@
   }
 
   body {
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(180deg, var(--bg-topo), transparent 420px),
+      radial-gradient(var(--grade) 1px, transparent 1.3px);
+    background-size:
+      100% 100%,
+      22px 22px;
+    background-attachment: fixed;
     color: var(--fg);
     font-family: var(--f-body);
-    font-size: 15px;
+    font-size: 14.5px;
     line-height: 1.45;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
   }
 
   button,

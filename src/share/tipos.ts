@@ -3,7 +3,8 @@
 export type Eixo = 'NS' | 'LO'
 export type Direcao = 'N' | 'S' | 'L' | 'O'
 export type Luz = 'Verde' | 'Amarelo' | 'Vermelho' | 'Piscante'
-export type TipoViatura = 'Ambulancia' | 'Bombeiros'
+// 'Policia' ainda não existe na API: a simulação já sabe desenhar e despachar quando ela mandar
+export type TipoViatura = 'Ambulancia' | 'Bombeiros' | 'Policia'
 export type PapelViatura = 'Patrulha' | 'Reserva'
 export type ModoViatura = 'Patrulha' | 'Emergencia' | 'Atendimento' | 'Retorno' | 'Reserva'
 export type StatusOcorrencia = 'ACaminho' | 'EmAtendimento' | 'ACaminhoHospital' | 'Encerrada'
@@ -13,6 +14,9 @@ export interface Cruzamento {
   id: string
   coluna: number
   linha: number
+  // opcional: vizinhos explícitos por direção (para malhas maiores ou irregulares). Sem isso, o vizinho é o
+  // cruzamento da coluna/linha ao lado.
+  vizinhos?: Partial<Record<Direcao, string>>
 }
 
 export interface Hospital {

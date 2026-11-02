@@ -1,11 +1,15 @@
 import { useCallback, useMemo } from 'react'
-import ControleDirecao from '../components/ControleDirecao'
+import Ajuda from '../components/Ajuda'
+import BarraMapa from '../components/BarraMapa'
 import FaixaEventos from '../components/FaixaEventos'
-import FalhasLegenda from '../components/FalhasLegenda'
+import DetalheCruzamento from '../components/DetalheCruzamento'
+import DetalheInstalacao from '../components/DetalheInstalacao'
+import Legenda from '../components/Legenda'
 import Mapa from '../components/Mapa'
-import PainelLateral from '../components/PainelLateral'
-import PainelViaturas from '../components/PainelViaturas'
-import RegistrarEmergencia from '../components/RegistrarEmergencia'
+import PainelEventos from '../components/PainelEventos'
+import PrimeirosPassos from '../components/PrimeirosPassos'
+import PainelControle from '../components/PainelControle'
+import Rodape from '../components/Rodape'
 import Topo from '../components/Topo'
 import { useAnimacao } from '../hooks/useAnimacao'
 import { useCarrosComuns } from '../hooks/useCarrosComuns'
@@ -15,10 +19,14 @@ import { useTeclado } from '../hooks/useTeclado'
 import { useViaturas } from '../hooks/useViaturas'
 import { useSimulacaoStore } from '../store/useSimulacaoStore'
 import type { Cores } from '../components/Mapa/desenho'
+import { ehNoite } from '../components/Mapa/pincel'
+import { MaquetePageStyles as S } from './styles'
 
-// Acima de 1280 px: controles | mapa + faixa de eventos | painel lateral.
-// Entre 1080 e 1279 px os controles descem para baixo do mapa; no celular tudo empilha.
+// O mapa é o centro: ferramentas em cima; avisos, legenda e log de eventos embaixo.
 export default function MaquetePage() {
+  const recolhida = useSimulacaoStore((s) => s.lateralRecolhida)
+  const logAberto = useSimulacaoStore((s) => s.logAberto)
+  const logAltura = useSimulacaoStore((s) => s.logAltura)
   const viaturas = useViaturas()
   const carros = useCarrosComuns()
   const { registrar } = useEmergencia()
@@ -34,7 +42,7 @@ export default function MaquetePage() {
     () => ({
       centroViatura: viaturas.centro,
       desenharVeiculos: (ctx: CanvasRenderingContext2D, tReal: number, cores: Cores, reduzMov: boolean) => {
-        carros.desenhar(ctx)
+        carros.desenhar(ctx, ehNoite(cores))
         viaturas.desenhar(ctx, tReal, cores, reduzMov)
       },
     }),
@@ -51,30 +59,33 @@ export default function MaquetePage() {
 
   const aoVerRequisitos = useCallback(() => {
     useSimulacaoStore.getState().setAba('Requisitos')
+    useSimulacaoStore.getState().setLogAberto(true)
     document.getElementById('painel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
   return (
-    <div className="mx-auto flex max-w-[1480px] flex-col gap-3.5 px-4 pt-3.5 pb-6">
+    // --log-h: altura do log; o mapa usa a altura que sobra da tela
+    <div className={S.pagina} style={{ '--log-h': `${logAberto ? logAltura : 46}px` } as React.CSSProperties}>
       <Topo aoVerRequisitos={aoVerRequisitos} />
-      <main className="grid grid-cols-1 gap-3.5 min-[1080px]:grid-cols-[minmax(0,1fr)_minmax(330px,410px)] min-[1080px]:items-start">
-        <section
-          aria-label="Maquete"
-          className="flex min-w-0 flex-col gap-3 min-[1280px]:grid min-[1280px]:grid-cols-[252px_minmax(0,1fr)] min-[1280px]:items-start"
-        >
-          <div className="flex min-w-0 flex-col gap-2.5">
-            <Mapa aoClicarCruzamento={aoClicarCruzamento} complementos={complementos} />
-            <FaixaEventos />
-          </div>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-3 min-[1280px]:order-first min-[1280px]:grid-cols-1">
-            <PainelViaturas esperando={viaturas.esperando} />
-            <ControleDirecao comando={viaturas.comando} />
-            <RegistrarEmergencia />
-            <FalhasLegenda />
-          </div>
+      <main className={`${S.grade} ${recolhida ? S.gradeRecolhida : S.gradeAberta}`}>
+        <section id="simulacao" aria-label="Simulação" className={S.centro}>
+          <BarraMapa comando={viaturas.comando} />
+          <Mapa aoClicarCruzamento={aoClicarCruzamento} complementos={complementos} />
+          <FaixaEventos />
+          <PrimeirosPassos />
+          <DetalheCruzamento />
+          <DetalheInstalacao />
+          <Legenda />
         </section>
-        <PainelLateral />
+        <div className={S.controles}>
+          <PainelControle esperando={viaturas.esperando} />
+        </div>
+        <div className={S.eventos}>
+          <PainelEventos />
+        </div>
       </main>
+      <Rodape />
+      <Ajuda />
     </div>
   )
 }

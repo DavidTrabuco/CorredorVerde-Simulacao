@@ -1,10 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { classeChip } from '../../share/estilos'
+import { IconeLog, IconeSeta } from '../../share/icones'
 import { REQUISITOS } from '../../share/requisitos'
 import type { EventoLog } from '../../share/tipos'
 import { useSimulacaoStore, type AbaPainel } from '../../store/useSimulacaoStore'
+import { CATEGORIAS, naCategoria } from '../../utils/categorias'
 import { fmtT } from '../../utils/formato'
-import { PainelLateralStyles as S } from './styles'
+import { PainelEventosStyles as S } from './styles'
 
 const MAX_LINHAS = 250
 
@@ -34,20 +36,30 @@ function Chips({ tags, aoClicar }: { tags: string[]; aoClicar: (tag: string) => 
   )
 }
 
-// UC10: aba Log (filtro e chips de RN/UC) e aba Requisitos (lista com contagem de uso).
-export default function PainelLateral() {
+// UC10: log de eventos embaixo do mapa (categorias, filtro e chips de RN/UC) e aba Requisitos (contagem de uso).
+export default function PainelEventos() {
   const aba = useSimulacaoStore((s) => s.aba)
   const setAba = useSimulacaoStore((s) => s.setAba)
   const log = useSimulacaoStore((s) => s.log)
   const filtro = useSimulacaoStore((s) => s.filtro)
   const setFiltro = useSimulacaoStore((s) => s.setFiltro)
+  const categoria = useSimulacaoStore((s) => s.categoria)
+  const setCategoria = useSimulacaoStore((s) => s.setCategoria)
   const mostrarApi = useSimulacaoStore((s) => s.mostrarApi)
   const setMostrarApi = useSimulacaoStore((s) => s.setMostrarApi)
   const contagem = useSimulacaoStore((s) => s.contagem)
+  const seqInicial = useSimulacaoStore((s) => s.seqInicial)
+  const aberto = useSimulacaoStore((s) => s.logAberto)
+  const setAberto = useSimulacaoStore((s) => s.setLogAberto)
+  const setAltura = useSimulacaoStore((s) => s.setLogAltura)
+  // arraste da alça: posição inicial do mouse e altura no começo
+  const arraste = useRef<{ y: number; altura: number } | null>(null)
 
   const filtrarPor = (tag: string) => {
     setFiltro(tag)
+    setCategoria('Todos')
     setAba('Log')
+    setAberto(true)
   }
 
   const eventos = useMemo(() => {
@@ -56,16 +68,17 @@ export default function PainelLateral() {
     for (let i = log.length - 1; i >= 0 && itens.length < MAX_LINHAS; i--) {
       const e = log[i]
       if (e.tipo === 'Api' && !mostrarApi) continue
+      if (!naCategoria(e, categoria)) continue
       if (texto && !`${e.tags.join(' ')} ${e.mensagem}`.toLowerCase().includes(texto)) continue
       itens.push(e)
     }
     return itens
-  }, [log, filtro, mostrarApi])
+  }, [log, filtro, categoria, mostrarApi])
 
   const totalLog = useMemo(() => log.filter((e) => e.tipo !== 'Api').length, [log])
 
   const abas: { nome: AbaPainel; rotulo: string }[] = [
-    { nome: 'Log', rotulo: 'Log' },
+    { nome: 'Log', rotulo: 'Eventos' },
     { nome: 'Requisitos', rotulo: 'Requisitos' },
   ]
 
@@ -76,7 +89,7 @@ export default function PainelLateral() {
         <span className={S.rid}>{id}</span>
         <span>{texto}</span>
         <span className={S.rst}>
-          <span className={`${S.obs} ${n ? S.obsSim : ''}`}>{n ? `${n}× na maquete` : 'ainda não agiu'}</span>
+          <span className={`${S.obs} ${n ? S.obsSim : ''}`}>{n ? `${n}× na simulação` : 'ainda não agiu'}</span>
           {extra && <span className={S.manual}>{extra}</span>}
         </span>
       </button>
@@ -84,27 +97,82 @@ export default function PainelLateral() {
   }
 
   return (
-    <aside id="painel" className={S.painel} aria-label="Log e requisitos">
-      <div className={S.abas} role="tablist">
-        {abas.map((a) => (
-          <button
-            key={a.nome}
-            type="button"
-            role="tab"
-            className={S.aba}
-            aria-selected={aba === a.nome}
-            aria-controls={`corpo${a.nome}`}
-            onClick={() => setAba(a.nome)}
-          >
-            {a.rotulo}
-            {a.nome === 'Log' && <span className={S.cont}>{totalLog}</span>}
-          </button>
-        ))}
-      </div>
+    <section id="painel" className={aberto ? S.painel : S.painelRecolhido} aria-label="Log de eventos e requisitos">
+      {aberto && (
+        <div
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Arraste para mudar a altura do log"
+          title="Arraste para mudar a altura · clique duplo volta ao tamanho padrão"
+          className={S.alca}
+          onPointerDown={(ev) => {
+            ev.currentTarget.setPointerCapture(ev.pointerId)
+            arraste.current = { y: ev.clientY, altura: useSimulacaoStore.getState().logAltura }
+          }}
+          onPointerMove={(ev) => {
+            if (!arraste.current) return
+            // arrastar para cima aumenta o log
+            setAltura(arraste.current.altura - (ev.clientY - arraste.current.y))
+          }}
+          onPointerUp={() => {
+            arraste.current = null
+          }}
+          onDoubleClick={() => setAltura(200)}
+        />
+      )}
+      <header className={S.cabecalho}>
+        <h2 className={S.titulo}>
+          <IconeLog className={S.icone} />
+          Log de eventos
+        </h2>
+        <div className={S.abas} role="tablist">
+          {abas.map((a) => (
+            <button
+              key={a.nome}
+              type="button"
+              role="tab"
+              className={S.aba}
+              aria-selected={aba === a.nome}
+              aria-controls="corpoPainel"
+              onClick={() => {
+                setAba(a.nome)
+                setAberto(true)
+              }}
+            >
+              {a.rotulo}
+              {a.nome === 'Log' && <span className={S.cont}>{totalLog}</span>}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          className={S.recolher}
+          aria-expanded={aberto}
+          aria-controls="corpoPainel"
+          title={aberto ? 'Recolher o log' : 'Abrir o log'}
+          onClick={() => setAberto(!aberto)}
+        >
+          {aberto ? 'Recolher' : 'Abrir'}
+          <IconeSeta className={aberto ? S.setaAberta : S.seta} />
+        </button>
+      </header>
 
-      {aba === 'Log' ? (
-        <div id="corpoLog" role="tabpanel" className={S.corpo}>
+      {!aberto ? null : aba === 'Log' ? (
+        <div id="corpoPainel" role="tabpanel" className={S.corpo}>
           <div className={S.filtros}>
+            <div className={S.categorias} role="group" aria-label="Categoria">
+              {CATEGORIAS.map((c) => (
+                <button
+                  key={c.nome}
+                  type="button"
+                  className={S.categoria}
+                  aria-pressed={categoria === c.nome}
+                  onClick={() => setCategoria(c.nome)}
+                >
+                  {c.rotulo}
+                </button>
+              ))}
+            </div>
             <input
               type="search"
               className={S.busca}
@@ -122,7 +190,7 @@ export default function PainelLateral() {
             <ol className={S.lista}>
               {eventos.length ? (
                 eventos.map((e) => (
-                  <li key={e.seq} className={`${S.linha} ${classeLinha(e.tipo)}`}>
+                  <li key={e.seq} className={`${S.linha} ${classeLinha(e.tipo)} ${seqInicial !== null && e.seq > seqInicial ? S.novo : ''}`}>
                     <time className={S.hora}>{fmtT(e.tempoSeg)}</time>
                     <Chips tags={e.tags} aoClicar={filtrarPor} />
                     <div className={classeMsg(e.tipo)}>{e.mensagem}</div>
@@ -135,7 +203,7 @@ export default function PainelLateral() {
           </div>
         </div>
       ) : (
-        <div id="corpoRequisitos" role="tabpanel" className={S.corpo}>
+        <div id="corpoPainel" role="tabpanel" className={S.corpo}>
           <p className={S.nota}>
             Mesmos IDs do documento da 1ª entrega. A contagem mostra quantas vezes a regra agiu nesta sessão. Clique numa
             linha para ver os eventos dela no log.
@@ -165,6 +233,6 @@ export default function PainelLateral() {
           </div>
         </div>
       )}
-    </aside>
+    </section>
   )
 }

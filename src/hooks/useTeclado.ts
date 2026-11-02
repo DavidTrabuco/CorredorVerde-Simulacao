@@ -19,12 +19,13 @@ const TECLAS: Record<string, DirecaoDesejada> = {
 }
 
 // Setas, WASD e espaço sempre dirigem a AMB-01 e nunca acionam o último botão clicado.
-// O campo de filtro do log é a única exceção. Esc cancela o modo de clique.
+// O campo de filtro do log é a única exceção. Esc cancela o modo de clique e para de seguir a viatura.
 export function useTeclado(comando: (d: DirecaoDesejada) => void) {
   useEffect(() => {
     const aoApertar = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {
         useSimulacaoStore.getState().setModoClique(null)
+        useSimulacaoStore.getState().setSeguindo(null)
         return
       }
       const alvo = ev.target as HTMLElement | null

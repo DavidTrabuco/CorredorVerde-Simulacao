@@ -1,18 +1,20 @@
 import { useState } from 'react'
 import { corViatura, type Cores } from '../components/Mapa/desenho'
+import { ehNoite } from '../components/Mapa/pincel'
 import { desenharViatura } from '../components/Mapa/desenhoVeiculos'
 import { api } from '../share/api'
 import { TENTATIVA_PODE_MS, VEL_VIATURA } from '../share/constantes'
 import type { Direcao, Estado, PodeAtravessar, Viatura } from '../share/tipos'
 import { useSimulacaoStore } from '../store/useSimulacaoStore'
-import { DIRS, OPOSTO, colunaLinha, direcaoEntre, ladoDaPista, posCruzamento, vagaBase, vizinho, type Ponto } from '../utils/geometria'
+import { DIRS, OPOSTO, colunaLinha, direcaoEntre, ladoDaPista, posCruzamento, vizinho, type Ponto } from '../utils/geometria'
+import { vagaBase } from '../share/instalacoes'
 import { T_PARE, decidirManual, passear, passoNaRua, type CarroComum, type DirecaoDesejada } from '../utils/movimento'
 
 const ANG: Record<Direcao, number> = { L: 0, S: Math.PI / 2, O: Math.PI, N: -Math.PI / 2 }
 const ID_MANUAL = 'AMB-01'
 const AVISO_MANUAL = 'Você assumiu a AMB-01. Desmarque "Eu dirijo a AMB-01" para ela voltar a andar sozinha.'
 
-// Estado de animação de uma viatura: só vive na maquete. As regras ficam na API.
+// Estado de animação de uma viatura: só vive na simulação (front). As regras ficam na API.
 export interface VeiculoFront {
   id: string
   tipo: Viatura['tipo']
@@ -78,6 +80,9 @@ function criarMotor() {
     consultando: false,
   })
 
+  // ângulo que está na tela de cada viatura (para a curva suave) e o tempo do último quadro desenhado
+  const angDesenhado = new Map<string, number>()
+  let ultimoDesenho = 0
   const grade = () => store().malha!
 
   function centro(v: VeiculoFront): Ponto {
@@ -95,7 +100,7 @@ function criarMotor() {
   function faixa(v: VeiculoFront) {
     const c = centro(v)
     const d = DIRS[v.dir]
-    const { coluna, linha } = colunaLinha(v.no, grade().colunas)
+    const { coluna, linha } = colunaLinha(v.no, grade())
     return d.dy === 0
       ? { eixo: 'H' as const, linha, sentido: d.dx as 1 | -1, s: c.x }
       : { eixo: 'V' as const, linha: coluna, sentido: d.dy as 1 | -1, s: c.y }
@@ -306,21 +311,30 @@ function criarMotor() {
       const { malha, estado } = store()
       if (!malha || !estado) return
       const tAnim = reduzMov ? 0 : tReal
+      const noite = ehNoite(cores)
+      // curva suave: o ângulo desenhado gira aos poucos até o ângulo real (só visual; a física não muda)
+      const dt = ultimoDesenho ? Math.min(0.1, tReal - ultimoDesenho) : 0
+      ultimoDesenho = tReal
       for (const vb of estado.viaturas) {
         const v = veiculos.get(vb.id)
         if (!v) continue
+        const anterior = angDesenhado.get(v.id) ?? v.ang
+        const diff = Math.atan2(Math.sin(v.ang - anterior), Math.cos(v.ang - anterior))
+        const ang = reduzMov ? v.ang : anterior + diff * Math.min(1, dt * 12)
+        angDesenhado.set(v.id, ang)
         desenharViatura(
           ctx,
           {
             tipo: v.tipo,
             pos: posicao(v),
-            ang: v.ang,
+            ang,
             emergencia: vb.modo === 'Emergencia' || vb.modo === 'Atendimento',
             corAnel: corViatura(v.id, cores),
           },
           tAnim,
           tReal,
           reduzMov,
+          noite,
         )
       }
     },

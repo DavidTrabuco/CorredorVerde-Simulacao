@@ -1,4 +1,5 @@
 import { Estilo } from '../../share/estilos'
+import { IconeVolante } from '../../share/icones'
 import { useSimulacaoStore } from '../../store/useSimulacaoStore'
 import type { DirecaoDesejada } from '../../utils/movimento'
 import { ControleDirecaoStyles as S } from './styles'
@@ -11,26 +12,26 @@ export default function ControleDirecao({ comando }: ControleDirecaoProps) {
   const manual = useSimulacaoStore((s) => s.manual)
   const setManual = useSimulacaoStore((s) => s.setManual)
 
-  const botao = (d: Exclude<DirecaoDesejada, null>, rotulo: string, aria: string, posicao: string) => (
-    <button type="button" className={`${S.botao} ${posicao}`} aria-label={aria} onClick={() => comando(d)}>
+  const botao = (d: Exclude<DirecaoDesejada, null>, rotulo: string, aria: string, extra = '') => (
+    <button type="button" className={`${S.botao} ${extra}`} aria-label={aria} onClick={() => comando(d)}>
       {rotulo}
     </button>
   )
 
   return (
-    <div className={Estilo.bloco}>
-      <div className={Estilo.blocoTit}>Dirigir a AMB-01</div>
-      <div className={S.direcao}>
-        <div className={S.dpad} aria-label="Direção da ambulância">
-          {botao('N', '↑', 'Norte', S.norte)}
-          {botao('O', '←', 'Oeste', S.oeste)}
-          {botao('PARAR', 'PARE', 'Parar', S.parar)}
-          {botao('L', '→', 'Leste', S.leste)}
-          {botao('S', '↓', 'Sul', S.sul)}
-        </div>
-        <p className={S.dica}>Setas ou WASD assumem a direção. Espaço para no próximo cruzamento.</p>
+    <div className={Estilo.grupo}>
+      <span className={Estilo.grupoTit}>
+        <IconeVolante />
+        Dirigir a AMB-01
+      </span>
+      <div className={S.setas} aria-label="Direção da ambulância">
+        {botao('O', '←', 'Oeste')}
+        {botao('N', '↑', 'Norte')}
+        {botao('S', '↓', 'Sul')}
+        {botao('L', '→', 'Leste')}
+        {botao('PARAR', 'PARE', 'Parar', S.parar)}
       </div>
-      <label className={S.chk}>
+      <label className={S.chk} title="Setas ou WASD assumem a direção. Espaço para no próximo cruzamento.">
         <input
           type="checkbox"
           checked={manual}
@@ -39,7 +40,7 @@ export default function ControleDirecao({ comando }: ControleDirecaoProps) {
             e.target.blur()
           }}
         />
-        Eu dirijo a AMB-01
+        Eu dirijo
       </label>
     </div>
   )
