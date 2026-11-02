@@ -1,4 +1,5 @@
 import { Estilo } from '../../share/estilos'
+import { IconeVolante } from '../../share/icones'
 import { useSimulacaoStore } from '../../store/useSimulacaoStore'
 import type { DirecaoDesejada } from '../../utils/movimento'
 import { ControleDirecaoStyles as S } from './styles'
@@ -19,7 +20,10 @@ export default function ControleDirecao({ comando }: ControleDirecaoProps) {
 
   return (
     <div className={Estilo.grupo}>
-      <span className={Estilo.grupoTit}>Dirigir a AMB-01</span>
+      <span className={Estilo.grupoTit}>
+        <IconeVolante />
+        Dirigir a AMB-01
+      </span>
       <div className={S.setas} aria-label="Direção da ambulância">
         {botao('O', '←', 'Oeste')}
         {botao('N', '↑', 'Norte')}

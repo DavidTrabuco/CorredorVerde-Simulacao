@@ -1,5 +1,6 @@
 import { useFalha } from '../../hooks/useFalha'
 import { Estilo } from '../../share/estilos'
+import { IconeAlerta } from '../../share/icones'
 import { useSimulacaoStore } from '../../store/useSimulacaoStore'
 import { FalhasStyles as S } from './styles'
 
@@ -10,7 +11,10 @@ export default function Falhas() {
 
   return (
     <div className={Estilo.grupo}>
-      <span className={Estilo.grupoTit}>Falhas</span>
+      <span className={Estilo.grupoTit}>
+        <IconeAlerta />
+        Falhas
+      </span>
       <div className={S.botoes}>
         <button type="button" className={Estilo.bt} aria-pressed={modoClique === 'falha'} onClick={alternarModo}>
           Simular falha

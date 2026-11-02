@@ -1,7 +1,9 @@
-import { B, FAIXA, H, M, RW, W } from '../share/constantes'
+import { B, FAIXA, M, RW } from '../share/constantes'
 import type { Direcao, Eixo, Malha } from '../share/tipos'
 
-type Grade = Pick<Malha, 'colunas' | 'linhas'>
+// A malha que a API manda. A lista de cruzamentos é opcional aqui só para os testes e para malhas antigas;
+// quando vem, ela manda nos IDs e nos vizinhos (nada de depender da conta linha * colunas + coluna + 1).
+export type Grade = Pick<Malha, 'colunas' | 'linhas'> & Partial<Pick<Malha, 'cruzamentos'>>
 
 export interface Ponto {
   x: number
@@ -28,25 +30,62 @@ export const OPOSTO: Record<Direcao, Direcao> = { N: 'S', S: 'N', L: 'O', O: 'L'
 
 export const TODAS_DIRECOES: Direcao[] = ['N', 'L', 'S', 'O']
 
-// id = linha * colunas + coluna + 1 (contrato-api.md)
-export const idDe = (coluna: number, linha: number, colunas: number) => `C${linha * colunas + coluna + 1}`
-
-export function colunaLinha(id: string, colunas: number) {
-  const n = Number(id.slice(1)) - 1
-  return { coluna: n % colunas, linha: Math.floor(n / colunas) }
+// Tamanho do mundo da simulação em px do mapa (5×4 dá 750×600).
+export function dimensoes(malha: Pick<Malha, 'colunas' | 'linhas'>) {
+  return { W: 2 * M + B * (malha.colunas - 1), H: 2 * M + B * (malha.linhas - 1) }
 }
 
-export function posCruzamento(id: string, malha: Pick<Malha, 'colunas'>): Ponto {
-  const { coluna, linha } = colunaLinha(id, malha.colunas)
+interface Indice {
+  porId: Map<string, { coluna: number; linha: number; vizinhos?: Partial<Record<Direcao, string>> }>
+  porPos: Map<string, string>
+}
+
+// Índice dos cruzamentos da malha (feito uma vez por lista que veio da API).
+const indices = new WeakMap<object, Indice>()
+function indice(malha: Grade): Indice | null {
+  const lista = malha.cruzamentos
+  if (!lista?.length) return null
+  let ind = indices.get(lista)
+  if (!ind) {
+    ind = { porId: new Map(), porPos: new Map() }
+    for (const c of lista) {
+      ind.porId.set(c.id, { coluna: c.coluna, linha: c.linha, vizinhos: c.vizinhos })
+      ind.porPos.set(`${c.coluna},${c.linha}`, c.id)
+    }
+    indices.set(lista, ind)
+  }
+  return ind
+}
+
+// Reserva para malhas sem lista de cruzamentos: id = linha * colunas + coluna + 1 (contrato-api.md).
+const idPelaConta = (coluna: number, linha: number, colunas: number) => `C${linha * colunas + coluna + 1}`
+
+// ID do cruzamento na coluna/linha, ou null se não existir.
+export function idEm(malha: Grade, coluna: number, linha: number): string | null {
+  const ind = indice(malha)
+  if (ind) return ind.porPos.get(`${coluna},${linha}`) ?? null
+  if (coluna < 0 || linha < 0 || coluna >= malha.colunas || linha >= malha.linhas) return null
+  return idPelaConta(coluna, linha, malha.colunas)
+}
+
+export function colunaLinha(id: string, malha: Grade) {
+  const c = indice(malha)?.porId.get(id)
+  if (c) return { coluna: c.coluna, linha: c.linha }
+  const n = Number(id.slice(1)) - 1
+  return { coluna: n % malha.colunas, linha: Math.floor(n / malha.colunas) }
+}
+
+export function posCruzamento(id: string, malha: Grade): Ponto {
+  const { coluna, linha } = colunaLinha(id, malha)
   return { x: M + coluna * B, y: M + linha * B }
 }
 
+// Vizinho na direção: o explícito da API, se veio; senão o cruzamento da coluna/linha ao lado.
 export function vizinho(malha: Grade, id: string, dir: Direcao): string | null {
-  const { coluna, linha } = colunaLinha(id, malha.colunas)
-  const c = coluna + DIRS[dir].dx
-  const l = linha + DIRS[dir].dy
-  if (c < 0 || l < 0 || c >= malha.colunas || l >= malha.linhas) return null
-  return idDe(c, l, malha.colunas)
+  const explicito = indice(malha)?.porId.get(id)?.vizinhos
+  if (explicito) return explicito[dir] ?? null
+  const { coluna, linha } = colunaLinha(id, malha)
+  return idEm(malha, coluna + DIRS[dir].dx, linha + DIRS[dir].dy)
 }
 
 export function direcaoEntre(malha: Grade, de: string, para: string): Direcao | null {
@@ -60,6 +99,7 @@ export function ladoDaPista(centro: Ponto, dir: Direcao, lado = FAIXA): Ponto {
 }
 
 export function quadras(malha: Grade): Quadra[] {
+  const { W, H } = dimensoes(malha)
   const xs = [0]
   const ys = [0]
   for (let c = 0; c < malha.colunas; c++) xs.push(M + c * B)
@@ -80,21 +120,7 @@ export function quadras(malha: Grade): Quadra[] {
   return out
 }
 
-// Quadra (coluna,linha) que abriga cada edifício especial do mapa.
-export const QUADRA_ESPECIAL: Record<string, { tipo: 'hosp' | 'base' | 'quartel'; nome: string }> = {
-  '3,1': { tipo: 'hosp', nome: 'HOSPITAL NORTE' },
-  '2,3': { tipo: 'hosp', nome: 'HOSPITAL SUL' },
-  '1,2': { tipo: 'base', nome: 'BASE SAMU' },
-  '4,3': { tipo: 'quartel', nome: 'BOMBEIROS' },
-}
-
-const QUADRA_BASE: Record<string, string> = { C11: '1,2', C20: '4,3' }
-
-// Onde a viatura de reserva fica estacionada: dentro do prédio da base.
-export function vagaBase(malha: Grade, no: string): Ponto {
-  const q = quadras(malha).find((b) => `${b.i},${b.j}` === QUADRA_BASE[no])
-  if (!q) return posCruzamento(no, malha)
-  const iy = q.y + 9
-  const ih = q.h - 18
-  return { x: q.x + q.w / 2 - 33, y: iy + ih / 2 - 8 }
-}
+// Hierarquia visual das ruas: a cada 3 ruas, uma é avenida (vertical: 2, 5, 8...; horizontal: 1, 4, 7...).
+// Só muda o desenho (canteiro, iluminação) e onde os ônibus passam; a rede e as faixas são as mesmas.
+export const ehAvenidaVertical = (c: number) => ((c % 3) + 3) % 3 === 2
+export const ehAvenidaHorizontal = (l: number) => ((l % 3) + 3) % 3 === 1
